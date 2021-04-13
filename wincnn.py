@@ -6,9 +6,11 @@ from functools import reduce
 
 
 def At(a,m,n):
+    tmp_1 = Matrix(m, n, lambda i,j: a[i]**j)
     return Matrix(m, n, lambda i,j: a[i]**j)
 
 def A(a,m,n):
+    tmp_2 = At(a, m-1, n).row_insert(m-1, Matrix(1, n, lambda i,j: 1 if j==n-1 else 0))
     return At(a, m-1, n).row_insert(m-1, Matrix(1, n, lambda i,j: 1 if j==n-1 else 0))
 
 def T(a,n):
@@ -16,6 +18,8 @@ def T(a,n):
 
 def Lx(a,n):
     x=symbols('x')
+    #not clear func:expand
+    tmp5 = Matrix(n, 1, lambda i,j: Poly((reduce(mul, ((x-a[k] if k!=i else 1) for k in range(0,n)), 1)).expand(basic=True), x))
     return Matrix(n, 1, lambda i,j: Poly((reduce(mul, ((x-a[k] if k!=i else 1) for k in range(0,n)), 1)).expand(basic=True), x))
 
 def F(a,n):
@@ -46,20 +50,26 @@ def F(a,n):
 
 def Fdiag(a,n):
     f=F(a,n)
+#    change from vector to Diag_matrix
     return Matrix(n, n, lambda i,j: (f[i,0] if i==j else 0))
 
 def FdiagPlus1(a,n):
     f = Fdiag(a,n-1)
     f = f.col_insert(n-1, zeros(n-1,1))
     f = f.row_insert(n-1, Matrix(1,n, lambda i,j: (1 if j==n-1 else 0)))
+#    f is diag_matrix
     return f
 
 def L(a,n):
     lx = Lx(a,n)
     f = F(a, n)
+#    func nth::coeff of the j_th order
+    tmp6 = Matrix(n, n, lambda i,j: lx[i, 0].nth(j)/f[i]).T
     return Matrix(n, n, lambda i,j: lx[i, 0].nth(j)/f[i]).T
 
 def Bt(a,n):
+    tmp4 = L(a,n)
+    tmp5 = T(a,n)
     return L(a,n)*T(a,n)
 
 def B(a,n):
@@ -78,6 +88,8 @@ def cookToomFilter(a,n,r,fractionsIn=FractionsInG):
         f[0,:] *= -1
     if fractionsIn == FractionsInG:
         AT = A(a,alpha,n).T
+#        matrix A/B is A*(B_-1 or B_inverse)
+        tmp_3 = A(a,alpha,r).T
         G = (A(a,alpha,r).T/f).T
         BT = f * B(a,alpha).T
     elif fractionsIn == FractionsInA:
@@ -184,9 +196,9 @@ def showCookToomConvolution(a,n,r,fractionsIn=FractionsInG):
         print ("")
 
 def main():
-    showCookToomFilter((0,1,-1), 2, 3)
-    print ("======================= ")
     showCookToomConvolution((0,1,-1),2,3)
+    print ("======================= ")
+    showCookToomFilter((0,1,-1), 2, 3)
 
 #debugfile('C:/Users/admin/Desktop/Git_Repo/TF/winogrrad/wincnn.py')
 if __name__ == '__main__':
